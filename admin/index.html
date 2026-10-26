@@ -145,7 +145,7 @@ $("#tokEdit").addEventListener("click",()=>showTok($("#tokBox").hidden));
 $("#tokSave").addEventListener("click",()=>{const t=$("#tok").value.trim();if(!t){toast("الصق المفتاح أولاً");return}try{localStorage.setItem(TK,t)}catch(e){}$("#tok").value="";showTok(false);toast("حُفظ المفتاح، اضغط «تفعيل التغييرات»")});
 async function sha1(b){return [...new Uint8Array(await crypto.subtle.digest("SHA-1",b))].map(x=>x.toString(16).padStart(2,"0")).join("")}
 async function liveCodes(){const r=await fetch("../app/codes.json?t="+Date.now(),{cache:"no-store"});return r.ok?(await r.json()).codes||[]:[]}
-async function gistCodes(){try{const g=await fetch(GAPI+"?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null);return g?JSON.parse(g.files["codes.json"].content):null}catch(e){return null}}
+async function gistCodes(){try{const tk=getTok();const g=await fetch(GAPI+"?t="+Date.now(),{cache:"no-store",headers:tk?{Authorization:"Bearer "+tk}:{}}).then(r=>r.ok?r.json():null);if(g)return JSON.parse(g.files["codes.json"].content);const l=await fetch("https://gist.githubusercontent.com/mzahrani5/"+GIST+"/raw/codes.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null);return l&&l.codes?l:null}catch(e){return null}}
 $("#pub").addEventListener("click",async()=>{
   const tok=getTok();if(!tok){showTok(true);toast("اربط الصفحة بمفتاح GitHub أولاً");return}
   const btn=$("#pub");btn.disabled=true;const lbl=btn.textContent;btn.textContent="جارٍ التفعيل…";
