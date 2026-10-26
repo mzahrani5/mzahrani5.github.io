@@ -4,173 +4,284 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<title>إدارة المشتركين</title>
+<meta name="theme-color" content="#0d3b3f">
+<title>إدارة المشتركين · السجل الرقمي الشامل</title>
 <link rel="icon" type="image/png" href="../icon-192.png">
 <style>
-/* Layout: one column admin ledger — add form, subscriber table, publish box */
-:root{--bg:#f2f4f1;--surface:#fff;--sunk:#e8ece7;--ink:#17231e;--muted:#5b6a63;--line:#d6ded8;--accent:#1c6a59;--accent-ink:#fff;--accent-soft:#deeee8;--ok:#2c7a4c;--ok-soft:#dcefe3;--bad:#b0352d;--bad-soft:#f6dcd9;--warn:#a96400;--warn-soft:#f7e8cf;
-  --f:system-ui,"Segoe UI",Tahoma,sans-serif}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1412;--surface:#161f1b;--sunk:#111916;--ink:#e5ece8;--muted:#97a69f;--line:#29352f;--accent:#55b79d;--accent-ink:#08120f;--accent-soft:#19302a;--ok:#63c48f;--ok-soft:#173326;--bad:#e8786e;--bad-soft:#3a1d1a;--warn:#e3a443;--warn-soft:#352816;color-scheme:dark}}
-*{box-sizing:border-box}
+/* Admin console: ink header bar, stat strip, subscriber ledger with row actions, settings drawer */
+:root{--bg:#edf1f0;--surface:#fff;--sunk:#e6ecea;--ink:#17231e;--muted:#5b6a63;--line:#d3dcd9;--accent:#127a6a;--accent-ink:#fff;--accent-soft:#dcefe9;--side:#0d3b3f;--side-ink:#e6f1ef;--side-mut:#9dbcb7;--amber:#f0a92e;--amber-ink:#2b1c02;
+  --ok:#2c7a4c;--ok-soft:#dcefe3;--bad:#b0352d;--bad-soft:#f6dcd9;--warn:#9a5b00;--warn-soft:#f7e8cf;--info:#36609f;--info-soft:#dfe7f4;--f:system-ui,"Segoe UI",Tahoma,sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#0c1312;--surface:#151e1b;--sunk:#101816;--ink:#e5ece8;--muted:#97a69f;--line:#29352f;--accent:#55b79d;--accent-ink:#08120f;--accent-soft:#19302a;--side:#0a1a1a;
+  --ok:#63c48f;--ok-soft:#173326;--bad:#e8786e;--bad-soft:#3a1d1a;--warn:#e3a443;--warn-soft:#352816;--info:#86a6e6;--info-soft:#1b2640;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.6}
-.wrap{max-width:900px;margin:0 auto;padding:24px max(16px,env(safe-area-inset-right,0px)) 60px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px}
-h1{margin:0;font-size:1.5rem;color:var(--accent)}
-.sub{margin:0;color:var(--muted);font-size:.9rem}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
-h2{margin:0 0 10px;font-size:1.1rem}
-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
-label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted);font-weight:600;flex:1;min-width:160px}
-input{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:8px;min-height:42px;padding:6px 10px}
-button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;min-height:40px;padding:6px 14px;font-weight:600}
-.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.small{min-height:32px;padding:2px 10px;font-size:.85rem}
-.danger{color:var(--bad)}
+a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select,textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:10px;min-height:42px;padding:6px 10px;width:100%}
+textarea{min-height:70px;resize:vertical}
+button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;min-height:40px;padding:6px 14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+button:hover{border-color:var(--accent)}
+.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ghost{background:none;border-color:transparent}
+.danger{color:var(--bad)}.danger.solid{background:var(--bad);border-color:var(--bad);color:#fff}
+.small{min-height:32px;padding:2px 10px;font-size:.84rem}
+button:disabled{opacity:.6;cursor:wait}
+.top{background:var(--side);color:var(--side-ink);padding:14px max(16px,env(safe-area-inset-right,0px));position:sticky;top:0;z-index:5}
+.top-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;flex:1;min-width:220px}
+.brand img{width:40px;height:40px;border-radius:10px}
+.brand b{display:block;font-size:1.1rem;color:#fff}.brand span{font-size:.8rem;color:var(--side-mut)}
+.sync{display:inline-flex;align-items:center;gap:8px;font-size:.84rem;color:var(--side-mut)}
+.sync i{width:9px;height:9px;border-radius:50%;background:var(--side-mut)}
+.sync.ok i{background:#63c48f}.sync.wait i{background:var(--amber)}.sync.err i{background:#e8786e}
+.top .btn{background:rgba(255,255,255,.08);border-color:transparent;color:var(--side-ink)}
+.top .btn.primary{background:var(--amber);color:var(--amber-ink)}
+.wrap{max-width:1240px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-right,0px)) 60px;display:flex;flex-direction:column;gap:16px}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-align:start;cursor:pointer;min-height:auto;display:block;font-weight:400}
+.stat b{display:block;font-size:1.7rem;line-height:1.2}.stat span{font-size:.82rem;color:var(--muted)}
+.stat[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.stat.s-on b{color:var(--ok)}.stat.s-soon b{color:var(--warn)}.stat.s-exp b,.stat.s-off b{color:var(--bad)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+h2{margin:0 0 12px;font-size:1.08rem}
+.field{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted);font-weight:600}
+.form{display:grid;gap:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border-radius:99px;min-height:32px;padding:2px 12px;font-size:.84rem}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .tbl{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:.92rem}
-th,td{padding:8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
-th{font-size:.8rem;color:var(--muted)}
-code{font-size:1rem;letter-spacing:.08em;background:var(--sunk);padding:2px 8px;border-radius:6px;direction:ltr;display:inline-block}
-.pill{font-size:.75rem;font-weight:700;padding:2px 9px;border-radius:99px}
-.on{background:var(--ok-soft);color:var(--ok)}.off{background:var(--bad-soft);color:var(--bad)}.new{background:var(--warn-soft);color:var(--warn)}
-.steps{margin:0;padding-inline-start:20px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
-.note{color:var(--muted);font-size:.85rem;margin:6px 0 0}
-.empty{color:var(--muted);text-align:center;padding:16px}
-.toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:99px;font-size:.88rem}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-button:disabled{opacity:.6;cursor:wait}
-.toast{max-width:90vw;text-align:center}
-.og{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
-[hidden]{display:none!important}
+th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+th{font-size:.78rem;color:var(--muted);font-weight:700;white-space:nowrap}
+td.nm b{display:block}td.nm small{color:var(--muted)}
+code{font-size:.95rem;letter-spacing:.08em;background:var(--sunk);padding:2px 8px;border-radius:6px;direction:ltr;display:inline-block;white-space:nowrap}
+.pill{font-size:.75rem;font-weight:700;padding:2px 10px;border-radius:99px;white-space:nowrap}
+.p-on{background:var(--ok-soft);color:var(--ok)}.p-off{background:var(--bad-soft);color:var(--bad)}.p-wait{background:var(--warn-soft);color:var(--warn)}.p-soon{background:var(--info-soft);color:var(--info)}
+.acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.note{color:var(--muted);font-size:.84rem;margin:6px 0 0}
+.empty{color:var(--muted);text-align:center;padding:24px}
+.toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:99px;font-size:.88rem;z-index:30;max-width:90vw;text-align:center}
+.og{position:fixed;inset:0;background:var(--side);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.og form{background:var(--surface);border-radius:18px;padding:26px 22px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:10px;text-align:center}
+.og h1{margin:0;font-size:1.35rem;color:var(--accent)}
+.code-in{text-align:center;font-size:1.15rem;letter-spacing:.12em}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:25}
+.sheet{background:var(--surface);border-radius:18px 18px 0 0;padding:20px;width:100%;max-width:520px;max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:10px}
+@media (min-width:700px){.scrim{align-items:center}.sheet{border-radius:18px}}
+.sheet h3{margin:0}
+.foot{color:var(--muted);font-size:.8rem;text-align:center;padding:10px}
+.tag{font-size:.72rem;background:var(--sunk);border-radius:6px;padding:1px 7px;color:var(--muted)}
+@media (max-width:980px){.grid2{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:620px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  table,thead,tbody,tr,td{display:block}thead{display:none}tr{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;padding:8px}td{border:0;padding:4px 6px}.acts{justify-content:flex-start}}
 </style>
 </head>
 <body>
-<div id="og" class="og"><form id="ogF" class="panel" style="max-width:360px;width:100%;display:flex;flex-direction:column;gap:10px;text-align:center">
-  <h1>إدارة المشتركين</h1><p class="sub">هذه الصفحة لصاحب السجل فقط. أدخل رمز المالك.</p>
-  <input id="ogC" dir="ltr" placeholder="XXXX-XXXX" autocomplete="off" style="text-align:center;font-size:1.1rem;letter-spacing:.1em">
-  <button class="primary" type="submit">دخول</button><p class="note" id="ogM" style="color:var(--bad);min-height:1.2em"></p></form></div>
-<div class="wrap" id="main" hidden>
-  <header><h1>إدارة المشتركين</h1><p class="sub">أنشئ رموز الاشتراك لسجل المهارات الرقمية المفرّغ وألغِها. الرموز محفوظة في هذا المتصفح فقط، فاستخدم هذه الصفحة من جهاز واحد.</p></header>
+<div id="og" class="og"><form id="ogF" autocomplete="off">
+  <img src="../icon-192.png" alt="" width="56" height="56" style="align-self:center;border-radius:12px">
+  <h1>إدارة المشتركين</h1><p class="note" style="margin:0">لصاحب السجل فقط. أدخل رمز المدير.</p>
+  <input id="ogC" class="code-in" dir="ltr" placeholder="XXXX-XXXX" autocapitalize="characters" spellcheck="false">
+  <button class="primary" type="submit">دخول</button><p class="note" id="ogM" style="color:var(--bad);min-height:1.2em;margin:0"></p></form></div>
 
-  <section class="panel">
-    <h2>مشترك جديد</h2>
-    <form id="addF">
-      <label>اسم المشترك<input id="fName" required placeholder="مثال: أ. خالد العتيبي"></label>
-      <label>ينتهي الاشتراك في<input id="fExp" type="date" value="2027-07-01"></label>
-      <button class="primary" type="submit">إنشاء رمز</button>
-    </form>
-    <details style="margin-top:10px"><summary class="note" style="cursor:pointer">إضافة رمز أنشأته سابقاً من جهاز آخر</summary>
-      <form id="impF" style="margin-top:8px">
-        <label>اسم المشترك<input id="iName" required></label>
-        <label>الرمز<input id="iCode" required dir="ltr" placeholder="XXXX-XXXX"></label>
-        <label>ينتهي الاشتراك في<input id="iExp" type="date" value="2027-07-01"></label>
-        <button type="submit">إضافة</button>
-      </form></details>
-  </section>
+<header class="top" id="top" hidden><div class="top-in">
+  <div class="brand"><img src="../icon-192.png" alt=""><div><b>إدارة المشتركين</b><span>السجل الرقمي الشامل</span></div></div>
+  <span class="sync" id="sync"><i></i><span>—</span></span>
+  <button class="btn primary" id="pub">نشر التغييرات</button>
+  <button class="btn" id="setBtn">الإعدادات</button>
+  <button class="btn" id="outBtn" title="خروج من صفحة الإدارة">خروج</button>
+</div></header>
 
-  <section class="panel">
-    <h2>المشتركون</h2>
-    <div class="tbl"><table><thead><tr><th>المشترك</th><th>الرمز</th><th>ينتهي</th><th>الحالة</th><th></th></tr></thead><tbody id="list"></tbody></table></div>
-  </section>
-
-  <section class="panel">
-    <h2>تفعيل التغييرات على الموقع</h2>
-    <p class="note" id="pending" style="margin:0 0 10px"></p>
-    <div id="tokBox" hidden style="background:var(--sunk);border-radius:10px;padding:12px;margin-bottom:12px">
-      <b>اربط الصفحة بحسابك في GitHub (مرة واحدة)</b>
-      <ol class="steps" style="margin-top:6px">
-        <li>افتح <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=sijil-codes" target="_blank" rel="noopener">صفحة إنشاء مفتاح GitHub</a> وسجّل الدخول.</li>
-        <li>اختر مدة «No expiration» وتأكد أن خيار gist محدد، ثم اضغط Generate token.</li>
-        <li>انسخ المفتاح (يبدأ بـ ghp_) والصقه هنا.</li>
-      </ol>
-      <div class="row" style="margin-top:8px"><input id="tok" type="password" dir="ltr" placeholder="ghp_..." style="flex:1;min-width:200px" autocomplete="off"><button class="primary" id="tokSave">حفظ المفتاح</button></div>
-      <p class="note">يُحفظ المفتاح في هذا المتصفح فقط، ويُستخدم لتحديث ملف الرموز في موقعك.</p>
-    </div>
-    <div class="row"><button class="primary" id="pub">تفعيل التغييرات على الموقع الآن</button><button class="small" id="tokEdit">تغيير مفتاح GitHub</button></div>
-    <p class="note">الرمز الجديد يعمل فور التفعيل. والرمز الملغى أو المنتهي يتوقف عند أول فتح للسجل بعد التفعيل، بشرط أن يكون جهاز المشترك متصلاً بالإنترنت.</p>
-    <details style="margin-top:8px"><summary class="note" style="cursor:pointer">نسخ احتياطي وطرق أخرى</summary>
-      <div class="row" style="margin-top:8px"><button id="dl">تنزيل ملف الرموز</button><button id="bk">نسخة احتياطية للمشتركين</button><label class="btn" style="flex:none;min-width:0;justify-content:center">استعادة<input type="file" id="rs" accept=".json" hidden></label></div>
-      <p class="note">بديل يدوي: ضع ملف الرموز داخل مجلد sijil-site ← app، ثم اسحب المجلد إلى Deploys في Netlify.</p></details>
-  </section>
-</div>
+<main class="wrap" id="main" hidden>
+  <section class="stats" id="stats" aria-label="ملخص المشتركين"></section>
+  <div class="grid2">
+    <section class="panel">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0">المشتركون</h2>
+        <div class="row"><input id="q" type="search" placeholder="بحث بالاسم أو البريد أو الرمز" style="width:240px"><button class="small" id="csv">تصدير Excel</button></div></div>
+      <div class="tbl"><table><thead><tr><th>المشترك</th><th>الرمز</th><th>من</th><th>ينتهي</th><th>الحالة</th><th></th></tr></thead><tbody id="list"></tbody></table></div>
+    </section>
+    <aside class="panel">
+      <h2>مشترك جديد</h2>
+      <form id="addF" class="form">
+        <label class="field">اسم المشترك<input id="fName" required placeholder="مثال: أ. خالد العتيبي"></label>
+        <label class="field">البريد أو الجوال (اختياري)<input id="fCon" dir="ltr" placeholder="name@example.com"></label>
+        <label class="field">مدة الاشتراك<select id="fDur"><option value="t1">حتى نهاية الفصل الأول (٧ يناير ٢٠٢٧)</option><option value="y" selected>حتى نهاية العام (١ يوليو ٢٠٢٧)</option><option value="3">٣ أشهر من اليوم</option><option value="12">سنة من اليوم</option><option value="c">تاريخ آخر…</option></select></label>
+        <label class="field" id="fExpW" hidden>ينتهي في<input id="fExp" type="date"></label>
+        <label class="field">عدد الرموز<input id="fN" type="number" min="1" max="50" value="1"><span style="font-weight:400">أكثر من رمز ينشئ رموزاً مرقّمة بنفس الاسم (مثلاً لمدرسة كاملة).</span></label>
+        <label class="field">ملاحظة (اختياري)<input id="fNote"></label>
+        <button class="primary" type="submit">إنشاء الرمز</button>
+      </form>
+      <details style="margin-top:12px"><summary class="note" style="cursor:pointer">إضافة رمز موجود مسبقاً</summary>
+        <form id="impF" class="form" style="margin-top:8px">
+          <label class="field">اسم المشترك<input id="iName" required></label>
+          <label class="field">الرمز<input id="iCode" required dir="ltr" class="code-in" placeholder="XXXX-XXXX"></label>
+          <label class="field">ينتهي في<input id="iExp" type="date" value="2027-07-01"></label>
+          <button type="submit">إضافة</button></form></details>
+    </aside>
+  </div>
+  <p class="foot">© ١٤٤٨هـ جميع الحقوق محفوظة لـ أ. ماجد أحمد الزهراني · <a href="mailto:mzh8@outlook.com">mzh8@outlook.com</a></p>
+</main>
+<div id="layer"></div>
 <script>
 (function(){
 "use strict";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const KEY="sijil_admin";
-let st={subs:[],published:[]};
-try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(d)st=d}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
-const norm=c=>String(c||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+const GIST="c83eb929af22bd0ed2494cd8d300c3b9",GAPI="https://api.github.com/gists/"+GIST,RAW="https://gist.githubusercontent.com/mzahrani5/"+GIST+"/raw/";
+const K_ST="sijil_admin2",K_TK="sijil_gh_token",K_OC="sijil_owner_code";
+const ld=k=>{try{return localStorage.getItem(k)}catch(e){return null}},sv=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+const norm=c=>String(c||"").replace(/[٠-٩]/g,x=>"٠١٢٣٤٥٦٧٨٩".indexOf(x)).replace(/[۰-۹]/g,x=>"۰۱۲۳۴۵۶۷۸۹".indexOf(x)).toUpperCase().replace(/[^A-Z0-9]/g,"");
+const fmt=c=>{c=norm(c);return c.length===8?c.slice(0,4)+"-"+c.slice(4):c};
 async function H(c){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("sijil:"+norm(c)));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
 function genCode(){const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";const r=crypto.getRandomValues(new Uint32Array(8));let s="";r.forEach((v,i)=>{s+=a[v%a.length];if(i===3)s+="-"});return s}
 const today=()=>new Date().toISOString().slice(0,10);
+const addM=(n)=>{const d=new Date();d.setMonth(d.getMonth()+n);return d.toISOString().slice(0,10)};
+const dAr=iso=>{if(!iso)return "—";try{return new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn",{day:"numeric",month:"short",year:"numeric"}).format(new Date(iso+"T12:00:00"))}catch(e){return iso}};
 let toastT;function toast(t){clearTimeout(toastT);let el=$(".toast");if(!el){el=document.createElement("div");el.className="toast";el.setAttribute("role","status");document.body.appendChild(el)}el.textContent=t;toastT=setTimeout(()=>el.remove(),4200)}
-const appUrl=()=>new URL("../app/",location.href).href;
-function welcome(s){return "السلام عليكم "+s.name+"\nتم تفعيل اشتراكك في سجل المهارات الرقمية.\nالرابط: "+appUrl()+"\nرمز الاشتراك: "+s.code+"\nصالح حتى: "+s.exp+"\nعلى الآيفون: افتح الرابط في Safari ثم زر المشاركة ← «إضافة إلى الشاشة الرئيسية»."}
 async function copy(t){try{await navigator.clipboard.writeText(t);toast("نُسخ")}catch(e){prompt("انسخ النص:",t)}}
-function pending(){const live=new Set(st.published);const want=new Set(st.subs.filter(s=>!s.revoked).map(s=>s.h));let n=0;want.forEach(h=>{if(!live.has(h))n++});live.forEach(h=>{if(!want.has(h)&&st.subs.some(s=>s.h===h))n++});return n}
-function render(){
-  const rows=st.subs.slice().reverse().map(s=>{const live=st.published.includes(s.h);const exp=s.exp&&s.exp<today();
-    const pill=s.revoked?(live?'<span class="pill new">يُلغى بعد التفعيل</span>':'<span class="pill off">ملغى</span>'):exp?'<span class="pill off">منتهٍ</span>':live?'<span class="pill on">مفعّل</span>':'<span class="pill new">بانتظار التفعيل</span>';
-    return `<tr><td>${esc(s.name)}</td><td><code>${esc(s.code)}</code></td><td>${esc(s.exp||"—")}</td><td>${pill}</td><td class="row">${s.revoked?`<button class="small" data-a="restore" data-h="${s.h}">إعادة</button>`:`<button class="small" data-a="msg" data-h="${s.h}">نسخ رسالة الترحيب</button><button class="small danger" data-a="revoke" data-h="${s.h}">إلغاء</button>`}</td></tr>`}).join("");
-  $("#list").innerHTML=rows||'<tr><td colspan="5" class="empty">لا يوجد مشتركون بعد. أضف أول مشترك من الأعلى.</td></tr>';
-  const n=pending();const pe=$("#pending");pe.textContent=n?("لديك "+n+" تغيير لم يُفعَّل بعد على الموقع. اضغط «تفعيل التغييرات على الموقع الآن»."):"الموقع محدّث بكل التغييرات.";pe.style.color=n?"var(--warn)":"var(--ok)";pe.style.fontWeight="600";
-}
-$("#addF").addEventListener("submit",async e=>{e.preventDefault();const name=$("#fName").value.trim();if(!name)return;const code=genCode();const h=await H(code);
-  st.subs.push({name,code,h,exp:$("#fExp").value||"",created:today()});save();$("#fName").value="";render();toast("أُنشئ رمز "+code)});
-$("#list").addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const s=st.subs.find(x=>x.h===b.dataset.h);if(!s)return;
-  if(b.dataset.a==="msg")copy(welcome(s));
-  if(b.dataset.a==="revoke"){s.revoked=true;save();render();toast("اضغط «تفعيل التغييرات» ليتوقف الرمز")}
-  if(b.dataset.a==="restore"){delete s.revoked;save();render()}});
-function downloadText(name,text){const u=URL.createObjectURL(new Blob([text],{type:"application/json"}));const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},1000)}
-$("#dl").addEventListener("click",()=>{
-  const known=new Set(st.subs.map(s=>s.h));
-  const keep=(st.publishedFull||[]).filter(x=>!known.has(x.h)); // codes published from elsewhere (e.g. the owner code)
-  const codes=keep.concat(st.subs.filter(s=>!s.revoked).map(s=>({id:s.created,h:s.h,exp:s.exp})));
-  downloadText("codes.json",JSON.stringify({updated:today(),codes},null,1));toast("نُزّل الملف");
-});
-$("#bk").addEventListener("click",()=>downloadText("subscribers-backup.json",JSON.stringify(st,null,1)));
-$("#rs").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.subs))throw 0;st=d;save();render();toast("تمت الاستعادة")}catch(err){toast("الملف غير صالح")}};r.readAsText(f);e.target.value=""});
-// ---- import a code created elsewhere ----
-$("#impF").addEventListener("submit",async e=>{e.preventDefault();const name=$("#iName").value.trim(),code=$("#iCode").value.trim();if(!name||!norm(code))return;
-  const h=await H(code);if(st.subs.some(s=>s.h===h)){toast("الرمز موجود في القائمة");return}
-  const c=norm(code);st.subs.push({name,code:c.length===8?c.slice(0,4)+"-"+c.slice(4):c,h,exp:$("#iExp").value||"",created:today()});save();e.target.reset();$("#iExp").value="2027-07-01";render();toast("أُضيف الرمز")});
-// ---- one-click publish through the Netlify API ----
-const SITE="378ff793-2e2f-43a5-ab20-19699634bb88",API="https://api.netlify.com/api/v1",TK="sijil_gh_token",GIST="c83eb929af22bd0ed2494cd8d300c3b9",GAPI="https://api.github.com/gists/"+GIST;
-const getTok=()=>{try{return localStorage.getItem(TK)||""}catch(e){return ""}};
-function showTok(v){$("#tokBox").hidden=!v;if(v)$("#tok").focus()}
-$("#tokEdit").addEventListener("click",()=>showTok($("#tokBox").hidden));
-$("#tokSave").addEventListener("click",()=>{const t=$("#tok").value.trim();if(!t){toast("الصق المفتاح أولاً");return}try{localStorage.setItem(TK,t)}catch(e){}$("#tok").value="";showTok(false);toast("حُفظ المفتاح، اضغط «تفعيل التغييرات»")});
-async function sha1(b){return [...new Uint8Array(await crypto.subtle.digest("SHA-1",b))].map(x=>x.toString(16).padStart(2,"0")).join("")}
-async function liveCodes(){const r=await fetch("../app/codes.json?t="+Date.now(),{cache:"no-store"});return r.ok?(await r.json()).codes||[]:[]}
-async function gistCodes(){try{const tk=getTok();const g=await fetch(GAPI+"?t="+Date.now(),{cache:"no-store",headers:tk?{Authorization:"Bearer "+tk}:{}}).then(r=>r.ok?r.json():null);if(g)return JSON.parse(g.files["codes.json"].content);const l=await fetch("https://gist.githubusercontent.com/mzahrani5/"+GIST+"/raw/codes.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null);return l&&l.codes?l:null}catch(e){return null}}
-$("#pub").addEventListener("click",async()=>{
-  const tok=getTok();if(!tok){showTok(true);toast("اربط الصفحة بمفتاح GitHub أولاً");return}
-  const btn=$("#pub");btn.disabled=true;const lbl=btn.textContent;btn.textContent="جارٍ التفعيل…";
-  try{
-    const live=(await gistCodes())||{codes:[]};
-    const known=new Set(st.subs.map(s=>s.h));const keep=(live.codes||[]).filter(c=>!known.has(c.h));
-    const codes=keep.concat(st.subs.filter(s=>!s.revoked).map(s=>({id:s.created,h:s.h,exp:s.exp})));
-    const r=await fetch(GAPI,{method:"PATCH",headers:{Authorization:"Bearer "+tok,Accept:"application/vnd.github+json","Content-Type":"application/json"},body:JSON.stringify({files:{"codes.json":{content:JSON.stringify({updated:today(),codes},null,1)}}})});
-    if(r.status===401||r.status===403||r.status===404){showTok(true);throw new Error("مفتاح GitHub غير صالح أو بلا صلاحية gist. أنشئ مفتاحاً جديداً والصقه.")}
-    if(!r.ok)throw new Error("تعذّر التفعيل ("+r.status+")");
-    st.publishedFull=codes;st.published=codes.map(c=>c.h);save();render();toast("فُعّلت التغييرات، تعمل الرموز فوراً");
-  }catch(e){toast(e.message||"تعذّر التفعيل");}
-  btn.disabled=false;btn.textContent=lbl;
-});
-// learn what is live now
-gistCodes().then(l=>{if(!l)return;st.publishedFull=l.codes||[];st.published=st.publishedFull.map(c=>c.h);save();render()}).catch(()=>{});
-render();
-// owner gate: the code listed as "owner" in codes.json opens this page
-(async()=>{const ok=()=>{$("#og").hidden=true;$("#main").hidden=false};
-  let saved=null;try{saved=localStorage.getItem("sijil_owner")}catch(e){}
-  const list=await fetch("../app/codes.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
-  const owner=list&&(list.codes||[]).find(c=>c.id==="owner");
-  if(saved&&owner&&saved===owner.h){ok();return}
-  $("#ogF").addEventListener("submit",async e=>{e.preventDefault();const h=await H($("#ogC").value);
-    if(owner&&h===owner.h){try{localStorage.setItem("sijil_owner",h)}catch(e){}ok()}else $("#ogM").textContent=owner?"رمز المالك غير صحيح.":"تحتاج اتصالاً بالإنترنت."});
+const appUrl=()=>new URL("../app/",location.href).href;
+
+// ---- state: subs [{h,name,con,code?,exp,created,note,off,u,del}] ----
+let st={subs:[],ownerH:"",published:{}};
+try{const d=JSON.parse(ld(K_ST)||"null");if(d&&Array.isArray(d.subs))st=Object.assign(st,d)}catch(e){}
+try{const old=JSON.parse(ld("sijil_admin")||"null");if(old&&Array.isArray(old.subs)&&!st.migrated){old.subs.forEach(s=>{if(!st.subs.some(x=>x.h===s.h))st.subs.push({h:s.h,name:s.name,code:s.code,exp:s.exp||"",created:s.created||today(),off:!!s.revoked,u:Date.now()})});st.migrated=true}}catch(e){}
+let ownerCode=ld(K_OC)||"";let dirty=false;
+const save=()=>sv(K_ST,JSON.stringify(st));
+const live=()=>st.subs.filter(s=>!s.del);
+function status(s){if(s.off)return "off";if(s.exp&&s.exp<today())return "exp";const pub=st.published[s.h];if(!pub)return "wait";if(s.exp&&s.exp<=addDaysISO(30))return "soon";return "on"}
+function addDaysISO(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+const SL={on:["مفعّل","p-on"],soon:["ينتهي قريباً","p-soon"],wait:["بانتظار النشر","p-wait"],exp:["منتهٍ","p-off"],off:["ملغى","p-off"]};
+
+// ---- crypto for the private admin file ----
+const b64=u=>btoa(String.fromCharCode(...new Uint8Array(u))),ub64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function keyOf(code){const base=await crypto.subtle.importKey("raw",new TextEncoder().encode("sijil-admin:"+norm(code)),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt:new TextEncoder().encode("sijil-admin-salt-v1"),iterations:150000,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"])}
+async function enc(obj,code){const k=await keyOf(code);const iv=crypto.getRandomValues(new Uint8Array(12));const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},k,new TextEncoder().encode(JSON.stringify(obj)));return JSON.stringify({v:1,iv:b64(iv),ct:b64(ct)})}
+async function dec(txt,code){const o=JSON.parse(txt);const k=await keyOf(code);const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub64(o.iv)},k,ub64(o.ct));return JSON.parse(new TextDecoder().decode(pt))}
+
+// ---- remote (gist) ----
+const tok=()=>ld(K_TK)||"";
+async function readRemote(){const t=tok();
+  try{if(t){const r=await fetch(GAPI+"?t="+Date.now(),{cache:"no-store",headers:{Authorization:"Bearer "+t}});if(r.ok){const g=await r.json();
+      return {codes:JSON.parse(g.files["codes.json"].content),subs:g.files["subs.json"]?g.files["subs.json"].content:null}}}}catch(e){}
+  const codes=await fetch(RAW+"codes.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
+  const subs=await fetch(RAW+"subs.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).catch(()=>null);
+  return codes?{codes,subs:subs&&subs.trim().startsWith("{")?subs:null}:null}
+function setSync(kind,text){const el=$("#sync");el.className="sync "+kind;el.querySelector("span").textContent=text}
+function merge(remoteSubs){(remoteSubs||[]).forEach(r=>{const l=st.subs.find(x=>x.h===r.h);if(!l)st.subs.push(r);else if((r.u||0)>(l.u||0)){const code=l.code;Object.assign(l,r);if(!l.code&&code)l.code=code}})}
+async function pull(){const R=await readRemote();if(!R){setSync("err","تعذّر الاتصال");return null}
+  st.published={};(R.codes.codes||[]).forEach(c=>{st.published[c.h]=1});
+  const own=(R.codes.codes||[]).find(c=>c.id==="owner");if(own)st.ownerH=own.h;
+  // codes published elsewhere but unknown here → import as unnamed so nothing is lost
+  (R.codes.codes||[]).forEach(c=>{if(c.id!=="owner"&&!st.subs.some(s=>s.h===c.h))st.subs.push({h:c.h,name:"مشترك (بدون اسم)",exp:c.exp||"",created:String(c.id||"").slice(0,10),u:1})});
+  if(R.subs&&ownerCode){try{const d=await dec(R.subs,ownerCode);merge(d.subs)}catch(e){}}
+  save();render();return R}
+async function publish(){const t=tok();if(!t){openSettings(true);toast("اربط الصفحة بمفتاح GitHub أولاً من الإعدادات");return false}
+  if(!ownerCode){toast("أعد الدخول برمز المدير");return false}
+  const btn=$("#pub");btn.disabled=true;setSync("wait","جارٍ النشر…");
+  try{await pull();
+    const codes=[{id:"owner",h:st.ownerH||await H(ownerCode),exp:""}].concat(live().filter(s=>!s.off).map(s=>({id:s.created||today(),h:s.h,exp:s.exp||""})));
+    const subsTxt=await enc({subs:st.subs.map(s=>{const o={...s};return o}),at:Date.now()},ownerCode);
+    const r=await fetch(GAPI,{method:"PATCH",headers:{Authorization:"Bearer "+t,Accept:"application/vnd.github+json","Content-Type":"application/json"},body:JSON.stringify({files:{"codes.json":{content:JSON.stringify({updated:today(),codes},null,1)},"subs.json":{content:subsTxt}}})});
+    if(r.status===401||r.status===403||r.status===404){openSettings(true);throw new Error("مفتاح GitHub غير صالح أو بلا صلاحية gist. أنشئ مفتاحاً جديداً من الإعدادات.")}
+    if(!r.ok)throw new Error("تعذّر النشر ("+r.status+")");
+    st.published={};codes.forEach(c=>st.published[c.h]=1);dirty=false;save();render();setSync("ok","منشور · يصل للمشتركين خلال دقائق");toast("نُشرت التغييرات");btn.disabled=false;return true
+  }catch(e){setSync("err","لم يُنشر");toast(e.message||"تعذّر النشر");btn.disabled=false;return false}}
+let autoT=null;function changed(msg){dirty=true;save();render();if(msg)toast(msg);if(tok()){setSync("wait","سيُنشر تلقائياً…");clearTimeout(autoT);autoT=setTimeout(publish,1500)}else setSync("wait","تغييرات غير منشورة")}
+
+// ---- UI ----
+let filt="all";
+function render(){const L=live();const cnt={all:L.length,on:0,soon:0,wait:0,exp:0,off:0};L.forEach(s=>cnt[status(s)]++);cnt.on+=cnt.soon;
+  $("#stats").innerHTML=[["all","الكل",""],["on","مفعّل","s-on"],["soon","ينتهي خلال ٣٠ يوماً","s-soon"],["exp","منتهٍ","s-exp"],["off","ملغى","s-off"]].map(([k,t,c])=>`<button class="stat ${c}" data-f="${k}" aria-pressed="${filt===k}"><b>${cnt[k]}</b><span>${t}</span></button>`).join("");
+  const q=norm($("#q").value)||"";const qs=$("#q").value.trim();
+  const rows=L.filter(s=>{const x=status(s);if(filt==="on"&&!(x==="on"||x==="soon"))return false;if(filt!=="all"&&filt!=="on"&&x!==filt)return false;
+      if(qs&&!((s.name||"").includes(qs)||(s.con||"").includes(qs)||(q&&norm(s.code||"").includes(q))))return false;return true})
+    .sort((a,b)=>(b.created||"").localeCompare(a.created||"")).map(s=>{const x=status(s);
+    return `<tr><td class="nm"><b>${esc(s.name)}</b>${s.con?`<small dir="ltr">${esc(s.con)}</small>`:""}${s.note?`<small> · ${esc(s.note)}</small>`:""}</td>
+      <td>${s.code?`<code>${esc(s.code)}</code>`:`<span class="tag" title="الرمز محفوظ مشفّراً، ويظهر فقط على الجهاز الذي أنشأه">مخفي</span>`}</td>
+      <td>${esc(dAr(s.created))}</td><td>${esc(dAr(s.exp))}</td><td><span class="pill ${SL[x][1]}">${SL[x][0]}</span></td>
+      <td><div class="acts">${s.code?`<button class="small" data-a="msg" data-h="${s.h}">رسالة</button>`:""}<button class="small" data-a="edit" data-h="${s.h}">تعديل</button>
+        ${s.off?`<button class="small" data-a="on" data-h="${s.h}">تفعيل</button>`:`<button class="small" data-a="off" data-h="${s.h}">إيقاف</button>`}
+        <button class="small danger" data-a="del" data-h="${s.h}">حذف</button></div></td></tr>`}).join("");
+  $("#list").innerHTML=rows||`<tr><td colspan="6" class="empty">${L.length?"لا نتائج مطابقة.":"لا يوجد مشتركون بعد. أضف أول مشترك من النموذج."}</td></tr>`}
+function sheet(html,mount){const L=$("#layer");L.innerHTML=`<div class="scrim"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;const sc=L.querySelector(".scrim");sc.addEventListener("click",e=>{if(e.target===sc||e.target.closest("[data-close]"))L.innerHTML=""});if(mount)mount(L.querySelector(".sheet"))}
+const close=()=>{$("#layer").innerHTML=""};
+function welcome(s){return "السلام عليكم "+s.name+"\nتم تفعيل اشتراكك في «السجل الرقمي الشامل».\nالرابط: "+appUrl()+"\nرمز الاشتراك: "+s.code+"\nصالح حتى: "+dAr(s.exp)+"\nأول مرة: اختر «حساب جديد» وأدخل الرمز ثم بريدك وكلمة مرور.\nللتواصل: mzh8@outlook.com"}
+function editSheet(s){sheet(`<h3>تعديل المشترك</h3><div class="form">
+    <label class="field">الاسم<input id="eN" value="${esc(s.name)}"></label>
+    <label class="field">البريد أو الجوال<input id="eC" dir="ltr" value="${esc(s.con||"")}"></label>
+    <label class="field">ينتهي في<input id="eE" type="date" value="${esc(s.exp||"")}"></label>
+    <div class="row"><span class="note" style="margin:0">تمديد سريع:</span><button class="small" data-x="3">+٣ أشهر</button><button class="small" data-x="6">+٦ أشهر</button><button class="small" data-x="12">+سنة</button></div>
+    <label class="field">ملاحظة<input id="eT" value="${esc(s.note||"")}"></label>
+    <div class="panel" style="padding:10px;background:var(--sunk);border:0"><b style="font-size:.9rem">تغيير رمز هذا المشترك</b><p class="note" style="margin:2px 0 8px">يتوقف الرمز القديم ويُنشأ رمز جديد. حساب المشترك وبياناته تبقى، لكنه يحتاج الرمز الجديد إن أنشأ حساباً آخر.</p><button class="small" id="eNew">إنشاء رمز جديد بدلاً من الحالي</button></div>
+    <div class="row"><button class="primary" id="eSave">حفظ</button><button data-close>إلغاء</button></div></div>`,el=>{
+    el.querySelectorAll("[data-x]").forEach(b=>b.addEventListener("click",()=>{const base=el.querySelector("#eE").value&&el.querySelector("#eE").value>today()?new Date(el.querySelector("#eE").value+"T12:00:00"):new Date();base.setMonth(base.getMonth()+Number(b.dataset.x));el.querySelector("#eE").value=base.toISOString().slice(0,10)}));
+    el.querySelector("#eSave").addEventListener("click",()=>{s.name=el.querySelector("#eN").value.trim()||s.name;s.con=el.querySelector("#eC").value.trim();s.exp=el.querySelector("#eE").value;s.note=el.querySelector("#eT").value.trim();s.u=Date.now();close();changed("حُفظ التعديل")});
+    el.querySelector("#eNew").addEventListener("click",async()=>{const code=genCode();const h=await H(code);const old=s.h;st.subs.push({h:old,del:true,u:Date.now()});s.h=h;s.code=code;s.u=Date.now();
+      // keep the tombstone separate from the live record
+      const ix=st.subs.findIndex(x=>x===s);st.subs=st.subs.filter((x,i)=>!(x.h===old&&!x.del&&i!==ix));close();changed("الرمز الجديد: "+code)})})}
+function confirmSheet(t,body,label,fn){sheet(`<h3>${esc(t)}</h3><p class="note" style="margin:0">${esc(body)}</p><div class="row"><button class="danger solid" id="cOk">${esc(label)}</button><button data-close>إلغاء</button></div>`,el=>el.querySelector("#cOk").addEventListener("click",()=>{close();fn()}))}
+function openSettings(tokFirst){const hasTok=!!tok();sheet(`<h3>الإعدادات</h3>
+  <div class="panel" style="padding:12px"><b>رمز المدير</b><p class="note" style="margin:2px 0 8px">الرمز الذي تدخل به هذه الصفحة. بعد تغييره يُطلب الرمز الجديد على كل الأجهزة.</p>
+    <div class="form"><label class="field">الرمز الحالي<input id="oOld" class="code-in" dir="ltr" placeholder="XXXX-XXXX"></label>
+    <label class="field">الرمز الجديد (٨ أحرف وأرقام إنجليزية على الأقل)<div class="row" style="flex-wrap:nowrap"><input id="oNew" class="code-in" dir="ltr" placeholder="XXXX-XXXX"><button class="small" id="oGen" type="button">توليد</button></div></label>
+    <button class="primary" id="oSave">تغيير رمز المدير</button></div></div>
+  <div class="panel" style="padding:12px"><b>مفتاح GitHub ${hasTok?'<span class="pill p-on">محفوظ</span>':'<span class="pill p-wait">غير محفوظ</span>'}</b>
+    <p class="note" style="margin:2px 0 8px">مرة واحدة لكل جهاز. افتح <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=sijil-codes" target="_blank" rel="noopener">صفحة إنشاء المفتاح</a>، اختر «No expiration» وصلاحية gist، ثم الصقه.</p>
+    <div class="row" style="flex-wrap:nowrap"><input id="tk" type="password" dir="ltr" placeholder="ghp_..." autocomplete="off"><button class="primary small" id="tkSave">حفظ</button></div></div>
+  <div class="panel" style="padding:12px"><b>نسخ احتياطي</b><div class="row" style="margin-top:8px"><button class="small" id="bk">تنزيل نسخة احتياطية</button><label class="btn small">استعادة<input type="file" id="rs" accept=".json" hidden></label></div></div>
+  <button data-close>إغلاق</button>`,el=>{
+    if(tokFirst)el.querySelector("#tk").focus();
+    el.querySelector("#oGen").addEventListener("click",()=>{el.querySelector("#oNew").value=genCode()});
+    el.querySelector("#tkSave").addEventListener("click",()=>{const t=el.querySelector("#tk").value.trim();if(!t){toast("الصق المفتاح أولاً");return}sv(K_TK,t);close();toast("حُفظ المفتاح");pull().then(()=>{if(dirty)publish()})});
+    el.querySelector("#oSave").addEventListener("click",async()=>{const o=el.querySelector("#oOld").value,n=el.querySelector("#oNew").value;
+      if(await H(o)!==st.ownerH&&norm(o)!==norm(ownerCode)){toast("الرمز الحالي غير صحيح");return}
+      if(norm(n).length<8){toast("الرمز الجديد قصير، استخدم ٨ أحرف وأرقام على الأقل");return}
+      if(!tok()){toast("احفظ مفتاح GitHub أولاً");return}
+      if(st.subs.some(s=>!s.del&&s.h===st.ownerH))0;
+      const prevCode=ownerCode,prevH=st.ownerH;ownerCode=fmt(n);st.ownerH=await H(n);sv(K_OC,ownerCode);sv("sijil_owner",st.ownerH);
+      const ok=await publish();if(!ok){ownerCode=prevCode;st.ownerH=prevH;sv(K_OC,prevCode);save();toast("لم يتغير الرمز");return}
+      close();sheet(`<h3>تغيّر رمز المدير</h3><p style="margin:0">الرمز الجديد:</p><code style="font-size:1.4rem;align-self:center">${esc(ownerCode)}</code><p class="note">احفظه في مكان آمن. الرمز القديم لم يعد يعمل.</p><div class="row"><button class="primary" id="cp">نسخ</button><button data-close>تم</button></div>`,e2=>e2.querySelector("#cp").addEventListener("click",()=>copy(ownerCode)))});
+    el.querySelector("#bk").addEventListener("click",()=>{const u=URL.createObjectURL(new Blob([JSON.stringify(st,null,1)],{type:"application/json"}));const a=document.createElement("a");a.href=u;a.download="subscribers-backup-"+today()+".json";document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},800)});
+    el.querySelector("#rs").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.subs))throw 0;merge(d.subs.map(s=>({...s,u:s.u||Date.now()})));close();changed("تمت الاستعادة")}catch(err){toast("الملف غير صالح")}};r.readAsText(f)});
+  })}
+
+// ---- events ----
+$("#fDur").addEventListener("change",e=>{$("#fExpW").hidden=e.target.value!=="c"});
+$("#addF").addEventListener("submit",async e=>{e.preventDefault();const name=$("#fName").value.trim();if(!name)return;
+  const d=$("#fDur").value;const exp=d==="t1"?"2027-01-07":d==="y"?"2027-07-01":d==="3"?addM(3):d==="12"?addM(12):($("#fExp").value||"2027-07-01");
+  const n=Math.max(1,Math.min(50,Number($("#fN").value)||1));const made=[];
+  for(let i=1;i<=n;i++){const code=genCode();const h=await H(code);const s={h,code,name:n>1?name+" ("+i+")":name,con:$("#fCon").value.trim(),note:$("#fNote").value.trim(),exp,created:today(),u:Date.now()};st.subs.push(s);made.push(s)}
+  e.target.reset();$("#fDur").value="y";$("#fN").value=1;$("#fExpW").hidden=true;changed();
+  if(n===1)sheet(`<h3>أُنشئ الرمز</h3><p style="margin:0">${esc(made[0].name)}</p><code style="font-size:1.4rem;align-self:center">${esc(made[0].code)}</code><p class="note">${tok()?"يُنشر تلقائياً ويعمل للمشترك خلال دقائق.":"اضغط «نشر التغييرات» ليعمل."}</p><div class="row"><button class="primary" id="cm">نسخ رسالة الترحيب</button><button data-close>تم</button></div>`,el=>el.querySelector("#cm").addEventListener("click",()=>copy(welcome(made[0]))));
+  else toast("أُنشئ "+n+" رموز")});
+$("#impF").addEventListener("submit",async e=>{e.preventDefault();const name=$("#iName").value.trim(),code=$("#iCode").value.trim();if(!name||!norm(code))return;const h=await H(code);
+  const ex=st.subs.find(s=>s.h===h&&!s.del);if(ex){ex.name=name;ex.code=fmt(code);ex.exp=$("#iExp").value||ex.exp;ex.u=Date.now();}else st.subs.push({h,code:fmt(code),name,exp:$("#iExp").value||"",created:today(),u:Date.now()});
+  e.target.reset();$("#iExp").value="2027-07-01";changed("أُضيف الرمز")});
+$("#list").addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const s=live().find(x=>x.h===b.dataset.h);if(!s)return;const a=b.dataset.a;
+  if(a==="msg")copy(welcome(s));
+  if(a==="edit")editSheet(s);
+  if(a==="off"){s.off=true;s.u=Date.now();changed("أُوقف الاشتراك")}
+  if(a==="on"){s.off=false;s.u=Date.now();changed("أُعيد تفعيل الاشتراك")}
+  if(a==="del")confirmSheet("حذف "+s.name,"يُحذف المشترك ورمزه نهائياً من القائمة، ويتوقف دخوله للسجل. بياناته المحفوظة في حسابه لا تُحذف.","حذف نهائي",()=>{s.del=true;s.u=Date.now();delete s.code;changed("حُذف المشترك")})});
+$("#stats").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(!b)return;filt=filt===b.dataset.f?"all":b.dataset.f;render()});
+$("#q").addEventListener("input",render);
+$("#pub").addEventListener("click",publish);
+$("#setBtn").addEventListener("click",()=>openSettings(false));
+$("#outBtn").addEventListener("click",()=>{sv(K_OC,null);sv("sijil_owner",null);location.reload()});
+$("#csv").addEventListener("click",()=>{const rows=[["الاسم","البريد/الجوال","الرمز","تاريخ الإنشاء","ينتهي","الحالة","ملاحظة"]].concat(live().map(s=>[s.name,s.con||"",s.code||"",s.created||"",s.exp||"",SL[status(s)][0],s.note||""]));
+  const csv="﻿"+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n");const u=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));const a=document.createElement("a");a.href=u;a.download="المشتركون "+today()+".csv";document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},800)});
+addEventListener("beforeunload",e=>{if(dirty&&!tok()){e.preventDefault();e.returnValue=""}});
+
+// ---- owner gate ----
+async function ownerHash(){const R=await readRemote();let h=R&&(R.codes.codes||[]).find(c=>c.id==="owner");if(h)return h.h;
+  const site=await fetch("../app/codes.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);h=site&&(site.codes||[]).find(c=>c.id==="owner");return h?h.h:""}
+function enter(){$("#og").hidden=true;$("#top").hidden=false;$("#main").hidden=false;render();setSync(tok()?"ok":"wait",tok()?"متصل":"اربط مفتاح GitHub من الإعدادات");pull()}
+(async()=>{const oh=await ownerHash();st.ownerH=oh||st.ownerH;
+  if(ownerCode&&oh&&(await H(ownerCode))===oh){enter();return}
+  $("#ogF").addEventListener("submit",async e=>{e.preventDefault();const c=$("#ogC").value;const h=await H(c);const ref=oh||st.ownerH;
+    if(ref&&h===ref){ownerCode=fmt(c);sv(K_OC,ownerCode);sv("sijil_owner",h);st.ownerH=h;save();enter()}else $("#ogM").textContent=ref?"رمز المدير غير صحيح.":"تحتاج اتصالاً بالإنترنت."});
 })();
 })();
 </script>
