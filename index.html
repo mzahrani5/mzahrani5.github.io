@@ -758,6 +758,16 @@ function syncCurs(){Object.values(S.classes||{}).forEach(c=>{if(c.cur)ensureCur(
     libOf(key).forEach(l=>{const n=Number(l.unit)||0;let x=u.find(y=>y.n===n);if(!x){x={n,title:l.unitTitle||(n?"الوحدة "+AR(n):"دروس مضافة"),lessons:[]};u.push(x)}else if(l.unitTitle&&!x.title)x.title=l.unitTitle;
       if(!x.lessons.some(y=>y.title===l.title))x.lessons.push({title:l.title,week:l.week||null,skills:l.skills||[],lib:true})});
     u.sort((a,b)=>(a.n||99)-(b.n||99));K.units=u})}
+const CAL_GEN={ds4t1:{start:"2026-08-23",weeks:19,breaks:["2026-11-22"],breakNames:{"2026-11-22":"إجازة الخريف"},
+  notes:{1:"بداية الدراسة للطلاب",5:"إجازة اليوم الوطني الأربعاء والخميس",13:"تبدأ إجازة الخريف بعد نهاية الأسبوع",14:"العودة بعد إجازة الخريف",19:"الاختبارات النهائية ونهاية الفصل الدراسي"}},
+ ds4t2:{start:"2027-01-17",weeks:19,breaks:["2027-02-28","2027-03-07","2027-05-09","2027-05-16"],breakNames:{"2027-02-28":"إجازة عيد الفطر","2027-03-07":"إجازة عيد الفطر","2027-05-09":"إجازة عيد الأضحى","2027-05-16":"إجازة عيد الأضحى"},
+  notes:{1:"بداية الفصل الدراسي الثاني",6:"إجازة يوم التأسيس الاثنين، وتبدأ إجازة عيد الفطر بعد نهاية الأسبوع",7:"العودة بعد إجازة عيد الفطر",14:"تبدأ إجازة عيد الأضحى بعد نهاية الأسبوع",15:"العودة بعد إجازة عيد الأضحى",19:"الاختبارات النهائية ونهاية العام الدراسي"}}};
+const REGIONS=[["general","التقويم العام لجميع مناطق المملكة"],["west","تقويم المنطقة الغربية (مكة المكرمة، المدينة المنورة، جدة، الطائف)"]];
+const region=()=>S.settings.region==="general"?"general":"west";
+const regionLabel=()=>region()==="general"?"التقويم العام لمناطق المملكة":"تقويم مكة والمدينة وجدة والطائف";
+const calKey=k=>region()==="west"?k:"g_"+k;
+function baseCal(k){const K=CURR[k];return region()==="general"&&CAL_GEN[k]?{...K,...CAL_GEN[k]}:K}
+function reweekAll(){Object.values(S.classes).forEach(c=>{if(!c.cur)return;c.lessons.forEach(l=>{if(l.cur&&l.week)l.date=weekStartOf(l.cur,l.week)});c.proj.forEach(p=>{if(p.cur&&p.week){const ws=weekStartOf(p.cur,p.week);if(ws)p.due=addDays(ws,4)}});store.touch("c_"+c.id)});render()}
 const termForToday=()=>curForToday()==="ds4t2"?"t2":"t1";
 const UNITN=["","الأولى","الثانية","الثالثة","الرابعة","الخامسة","السادسة","السابعة","الثامنة"];
 const isoOf=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
@@ -765,8 +775,8 @@ const addDays=(iso,n)=>{const d=toDate(iso);d.setDate(d.getDate()+n);return isoO
 const dm=iso=>{try{return new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn",{day:"numeric",month:"long"}).format(toDate(iso))}catch(e){return iso}};
 const hdm=iso=>{try{return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{day:"numeric",month:"long"}).format(toDate(iso))}catch(e){return ""}};
 const AR=n=>String(n).replace(/\d/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]);
-function calOf(key){ensureCur(key);const k=CURR[key];if(!k)return null;const b=CURR[k.base]||k;const o=((S.settings.cal||{})[k.base||key])||{};
-  return {start:o.start||b.start,breaks:Array.isArray(o.breaks)?o.breaks:b.breaks,weeks:b.weeks,notes:k.notes||{},act:k.activities||{},names:k.breakNames||{}}}
+function calOf(key){ensureCur(key);const k=CURR[key];if(!k)return null;const bk=k.base||key;const b=baseCal(bk);const o=((S.settings.cal||{})[calKey(bk)])||{};
+  return {start:o.start||b.start,breaks:Array.isArray(o.breaks)?o.breaks:b.breaks,weeks:b.weeks,notes:b.notes||{},act:k.activities||{},names:b.breakNames||{}}}
 function weekList(key){const cal=calOf(key);if(!cal)return [];const out=[];const br=new Set(cal.breaks);let d=cal.start,n=0,g=0;
   while(n<cal.weeks&&g++<90){if(br.has(d))out.push({brk:true,start:d,end:addDays(d,4),name:cal.names[d]||"إجازة"});
     else{n++;out.push({n,start:d,end:addDays(d,4),note:cal.notes[n]||"",act:cal.act[n]||""})}d=addDays(d,7)}
@@ -801,9 +811,9 @@ function vPlan(v){
   const extra=c.lessons.filter(l=>l.cur!==key||!l.week);
   const before=today<wl[0].start,after=today>addDays(wl[wl.length-1].start,6);
   const rowsW=weekRows(key);
-  v.innerHTML=`<div class="sec-head"><div><h2>الخطة الأسبوعية</h2><p class="sub">${esc(K.label)} · ${AR(K.weeks)} أسبوعاً · تقويم مكة والمدينة وجدة والطائف</p></div>
-    <div class="row"><button class="btn primary" data-act="addLesson">+ درس</button><button class="btn" data-act="preview" data-type="plan">طباعة الخطة</button></div></div>
-  ${!lessons.length?`<p class="warnline" style="margin-bottom:12px">لا توجد دروس في خطة ${esc(K.grade)} بعد. اضغط «+ درس» بجانب أي أسبوع لإضافة درس ومهاراته، ويُحفظ في خطة الصف ليظهر في جميع فصوله.</p>`:""}
+  v.innerHTML=`<div class="sec-head"><div><h2>الخطة الأسبوعية</h2><p class="sub">${esc(K.label)} · ${AR(calOf(key).weeks)} أسبوعاً · ${regionLabel()}</p></div>
+    <div class="row"><button class="btn primary" data-act="addLesson">+ درس</button><button class="btn" data-act="importCur">تحميل المنهج</button><button class="btn" data-act="preview" data-type="plan">طباعة الخطة</button></div></div>
+  ${!lessons.length?`<p class="warnline" style="margin-bottom:12px">لا توجد دروس في خطة ${esc(K.grade)} بعد. اضغط «تحميل المنهج» لإدخال دروس الصف كاملة فيوزّعها السجل على أسابيع التقويم تلقائياً، أو «+ درس» بجانب أي أسبوع.</p>`:""}
   ${K.draft?`<p class="warnline" style="margin-bottom:12px">وحدات الفصل الثاني مسودة مبدئية. راجعها مع فهرس كتاب الفصل الثاني حين يصل، ويمكنك تعديل أي درس أو مهارة من تبويب «المهارات».</p>`:""}
   <div class="plan-sum">
     <div><span>الأسبوع الحالي</span><b>${cw&&!cw.brk?"الأسبوع "+AR(cw.n):cw&&cw.brk?esc(cw.name):before?"لم يبدأ الفصل":after?"انتهى الفصل":"—"}</b></div>
@@ -959,6 +969,56 @@ function lessonForm(L,wk0){
       c.lessons=c.lessons.filter(x=>x.id!==L.id);L.skills.forEach(s=>{for(const sid in c.skillMarks)delete c.skillMarks[sid][s.id]});if(c.done)delete c.done[L.id];store.touch("c_"+c.id);render()}));
   });
 }
+// ---------- curriculum import & auto distribution ----------
+function parseCurText(t){const out=[];let u=0,ut="";
+  t.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach(line=>{
+    const m=/^(#+|الوحدة|وحدة)\s*(.*)$/.exec(line);
+    if(m){u++;ut=m[1].startsWith("#")?m[2]:line.replace(/^(الوحدة|وحدة)\s*[^:：\-–]*[:：\-–]?\s*/,"")||line;return}
+    const [title,sk]=line.split(/[:：]/);const name=title.replace(/^[\d٠-٩]+[.\-)]\s*/,"").trim();if(!name)return;
+    out.push({title:name,unit:u||null,unitTitle:u?ut:"",skills:(sk||"").split(/[،,؛;]/).map(x=>x.trim()).filter(Boolean)})});
+  return out}
+function parseCurRows(rows){const out=[];const units=[];let lastU="";
+  rows.forEach((r,i)=>{r=r.map(x=>String(x==null?"":x).trim());if(!r.some(Boolean))return;if(i===0&&r.join(" ").includes("الدرس"))return;
+    let [uu,title,sk]=r;if(!title){title=uu;uu=lastU}if(!title)return;uu=uu||lastU;lastU=uu;
+    let n=0;if(uu){if(!units.includes(uu))units.push(uu);n=units.indexOf(uu)+1}
+    out.push({title,unit:n||null,unitTitle:uu?String(uu).replace(/^(الوحدة|وحدة)\s*[^:：\-–]*[:：\-–]\s*/,""):"",skills:(sk||"").split(/[،,؛;\n]/).map(x=>x.trim()).filter(Boolean)})});
+  return out}
+function distribute(items,W,reserve){const N=items.length;const avail=Math.max(1,W-(reserve&&W>2?1:0));
+  return items.map((it,i)=>({...it,week:Math.min(avail,Math.floor(i*avail/N)+1)}))}
+function curImport(){
+  const c=C();if(!c.cur){toast("حدّد صف الفصل أولاً");classForm(c);return}
+  const key=c.cur,K=CURR[key],W=calOf(key).weeks;let items=[];
+  const same=Object.values(S.classes).filter(x=>x.cur===key);
+  sheet(`<h3>تحميل منهج ${esc(K.grade)} · ${esc(K.term)}</h3><div class="stack" style="display:flex;flex-direction:column;gap:12px">
+    <p class="note" style="margin:0">أدخل دروس الفصل الدراسي بالترتيب، ويوزّعها السجل على ${AR(W)} أسبوعاً دراسياً حسب ${regionLabel()} مع تخطي الإجازات، ثم يضيفها لجميع فصول ${esc(K.grade)} (${AR(same.length)}).</p>
+    <div class="row"><label class="btn" for="ciFile">رفع ملف Excel</label><input type="file" id="ciFile" accept=".xlsx,.xls,.csv" hidden><button class="btn small ghost" type="button" id="ciTpl">تنزيل القالب</button></div>
+    <label class="field"><span>أو الصق الدروس هنا: سطر لكل درس، وسطر «الوحدة …» لبداية كل وحدة، والمهارات بعد «:» مفصولة بفاصلة</span>
+      <textarea id="ciText" style="min-height:170px" placeholder="الوحدة الأولى: الحاسب وأجزاؤه&#10;مكونات الحاسب: يميّز مكونات الحاسب، يذكر وظيفة كل جزء&#10;سطح المكتب: يتعرّف عناصر سطح المكتب&#10;الوحدة الثانية: معالجة النصوص&#10;لوحة المفاتيح"></textarea></label>
+    <label class="check"><input type="checkbox" id="ciRes" checked> اترك الأسبوع الأخير للمراجعة والاختبارات</label>
+    <label class="check"><input type="checkbox" id="ciRep" ${libOf(key).length?"":"checked"}> استبدل خطة الصف السابقة (الدروس التي لم تُسجّل لها تقييمات)</label>
+    <div id="ciPrev" class="note"></div>
+    <div class="actions"><button class="btn primary" type="button" id="ciGo" disabled>توزيع على الأسابيع وحفظ</button><button class="btn" type="button" data-act="close">إلغاء</button></div></div>`,el=>{
+    const prev=()=>{const res=el.querySelector("#ciRes").checked;const d=items.length?distribute(items,W,res):[];el.querySelector("#ciGo").disabled=!d.length;
+      if(!d.length){el.querySelector("#ciPrev").textContent="";return}
+      const units=new Set(d.map(x=>x.unit).filter(Boolean)).size;const per=d.length/Math.max(1,(res&&W>2?W-1:W));
+      el.querySelector("#ciPrev").innerHTML=`<b>${AR(d.length)} درساً</b>${units?" في "+(units===1?"وحدة واحدة":units===2?"وحدتين":AR(units)+" وحدات"):""}، بمعدل ${per>=1?"نحو "+AR(Math.round(per*10)/10)+" درس في الأسبوع":"درس كل "+AR(Math.round(1/per*10)/10)+" أسبوع تقريباً"}.<br>`+d.slice(0,4).map(x=>"الأسبوع "+AR(x.week)+": "+esc(x.title)).join("، ")+(d.length>4?"…":"")};
+    el.querySelector("#ciText").addEventListener("input",e=>{items=parseCurText(e.target.value);prev()});
+    el.querySelector("#ciRes").addEventListener("change",prev);
+    el.querySelector("#ciFile").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{const X=await SheetLib();const wb=X.read(await f.arrayBuffer());const rows=X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:""});
+      items=parseCurRows(rows);el.querySelector("#ciText").value=items.map((x,i)=>(x.unit&&(i===0||items[i-1].unit!==x.unit)?"الوحدة "+(UNITN[x.unit]||x.unit)+": "+x.unitTitle+"\n":"")+x.title+(x.skills.length?": "+x.skills.join("، "):"")).join("\n");prev()}catch(err){toast("تعذّر قراءة الملف")}});
+    el.querySelector("#ciTpl").addEventListener("click",async()=>{const X=await SheetLib();const ws=X.utils.aoa_to_sheet([["الوحدة","الدرس","المهارات (مفصولة بفاصلة)"],["الوحدة الأولى: الحاسب وأجزاؤه","مكونات الحاسب","يميّز مكونات الحاسب، يذكر وظيفة كل جزء"],["الوحدة الأولى: الحاسب وأجزاؤه","سطح المكتب","يتعرّف عناصر سطح المكتب"],["الوحدة الثانية: معالجة النصوص","لوحة المفاتيح","يستخدم مفاتيح الكتابة"]]);ws["!cols"]=[{wch:32},{wch:28},{wch:48}];
+      const wb=X.utils.book_new();wb.Workbook={Views:[{RTL:true}]};X.utils.book_append_sheet(wb,ws,"المنهج");saveFile("قالب المنهج.xlsx",X.write(wb,{type:"array",bookType:"xlsx"}),"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")});
+    el.querySelector("#ciGo").addEventListener("click",()=>{const d=distribute(items,W,el.querySelector("#ciRes").checked);if(!d.length)return;const rep=el.querySelector("#ciRep").checked;
+      S.settings.lib=S.settings.lib||{};const old=libOf(key).map(x=>x.title);
+      const recs=d.map(x=>({title:x.title,unit:x.unit,unitTitle:x.unitTitle,week:x.week,skills:x.skills}));
+      S.settings.lib[key]=rep?recs:libOf(key).filter(x=>!recs.some(r=>r.title===x.title)).concat(recs);
+      same.forEach(cl=>{
+        if(rep){const oldSet=new Set(old);cl.lessons=cl.lessons.filter(l=>!(l.cur===key&&oldSet.has(l.title)&&!recs.some(r=>r.title===l.title)&&!(cl.done&&cl.done[l.id])&&!cl.students.some(s=>{const m=cl.skillMarks[s.id];return m&&l.skills.some(k=>m[k.id]!=null)})))}
+        recs.forEach(r=>{const l=cl.lessons.find(x=>x.cur===key&&x.title===r.title);if(l){l.week=r.week;l.date=weekStartOf(key,r.week);l.unit=r.unit;l.unitTitle=r.unitTitle;const have=new Set(l.skills.map(s=>s.name));r.skills.forEach(n=>{if(!have.has(n))l.skills.push({id:nid(),name:n})})}});
+        applyCurriculum(cl,key);store.touch("c_"+cl.id)});
+      store.touch("settings");closeSheet();render();toast("وُزّع "+AR(recs.length)+" درساً على أسابيع "+K.term)});
+  });
+}
 function demo(){
   const key="ds4t1";const id=newClass({name:"رابع / ١ (تجريبي)",grade:CURR[key].grade,ppw:2,days:[0,2]});const c=S.classes[id];applyCurriculum(c,key);
   ["عبدالله محمد العتيبي","فيصل خالد القحطاني","سعود ناصر الحربي","تركي سعد الشهري","يوسف علي الزهراني","ريان فهد الغامدي","مشعل عبدالرحمن المالكي","عمر حسن الثقفي"].forEach(n=>c.students.push({id:nid(),name:n}));
@@ -980,7 +1040,7 @@ function pagesPlan(c){
     return `<tr><td class="num"><b>${AR(w.n)}</b></td><td class="sm">${esc(dm(w.start))} – ${esc(dm(w.end))}<br><span class="mut">${esc(hdm(w.start))} – ${esc(hdm(w.end))}</span></td>
       <td class="sm">${[...new Set(ls.map(l=>l.unit))].map(u=>"الوحدة "+AR(u)).join("، ")}</td><td class="nm">${ls.map(l=>esc(l.title)).join("<br>")}${w.act?`<div class="mut sm">${esc(w.act)}</div>`:""}${w.note?`<div class="sm t-warn">${esc(w.note)}</div>`:""}</td>
       <td class="sm">${ls.map(l=>c.done&&c.done[l.id]?`<span class="t-ok">✓ ${esc(c.done[l.id])}</span>`:"").join("<br>")}</td><td></td></tr>`}).join("");
-  return [{o:"p",html:pgHead(c,"توزيع المنهج والخطة الأسبوعية")+`<p class="pg-note">${esc(K.label)} · ${AR(K.weeks)} أسبوعاً دراسياً · تقويم إدارات تعليم مكة المكرمة والمدينة المنورة وجدة والطائف ١٤٤٨هـ</p>
+  return [{o:"p",html:pgHead(c,"توزيع المنهج والخطة الأسبوعية")+`<p class="pg-note">${esc(K.label)} · ${AR(calOf(key).weeks)} أسبوعاً دراسياً · ${region()==="general"?"التقويم الدراسي العام لمناطق المملكة":"تقويم إدارات تعليم مكة المكرمة والمدينة المنورة وجدة والطائف"} ١٤٤٨هـ</p>
     <table class="pg-t pg-plan"><thead><tr><th>الأسبوع</th><th>التاريخ</th><th>الوحدة</th><th class="nm">الدروس والأنشطة</th><th>تاريخ التنفيذ</th><th>ملاحظات</th></tr></thead><tbody>${rows}</tbody></table>`+pgSign()}];
 }
 
@@ -1153,9 +1213,10 @@ function vSettings(v){
       <div class="bellgrid">${PN.map((n,i)=>`<label class="field"><span>الحصة ${n}</span><input type="time" id="bell_${i}" value="${esc((st.bell||[])[i]||"")}"></label>`).join("")}
         <label class="field"><span>مدة الحصة (دقيقة)</span><input type="number" id="s_plen" min="20" max="90" value="${Number(st.plen)||45}"></label></div>
       <p class="note" style="margin:6px 0 0">عند فتح «الحضور» يختار السجل تلقائياً الفصل والحصة الجارية الآن حسب هذا التوقيت وجدول كل فصل. الوقت المكتوب في جدول الفصل له الأولوية.</p></fieldset>
-    <fieldset class="full"><legend>التقويم الدراسي ١٤٤٨هـ (مكة المكرمة، المدينة المنورة، جدة، الطائف)</legend>
+    <fieldset class="full"><legend>التقويم الدراسي ١٤٤٨هـ</legend>
       <div class="stack" style="display:flex;flex-direction:column;gap:10px">
-      ${CUR_KEYS.map(k=>{const cal=calOf(k);return `<div class="row" style="align-items:flex-end"><b style="min-width:150px">${esc(CURR[k].term)} · ${AR(CURR[k].weeks)} أسبوعاً</b>
+      <label class="field"><span>التقويم المستخدم في الخطة</span><select id="s_region">${REGIONS.map(([k,t])=>`<option value="${k}" ${region()===k?"selected":""}>${t}</option>`).join("")}</select></label>
+      ${CUR_KEYS.map(k=>{const cal=calOf(k);return `<div class="row" style="align-items:flex-end"><b style="min-width:150px">${esc(CURR[k].term)} · ${AR(cal.weeks)} أسبوعاً</b>
         <label class="field"><span>أول يوم دراسي (الأحد)</span><input type="date" id="cal_s_${k}" value="${cal.start}"></label>
         <label class="field" style="flex:1;min-width:220px"><span>أسابيع الإجازات (تاريخ الأحد، مفصولة بفاصلة)</span><input type="text" id="cal_b_${k}" value="${esc(cal.breaks.join("، "))}" dir="ltr"></label></div>`}).join("")}
       <p class="note" style="margin:0">التقويم واحد لجميع الصفوف. التواريخ مأخوذة من التقويم الدراسي المعلن للمنطقة الغربية. عدّلها إذا صدر تعميم بإجازة إضافية، وستتحدث الخطة الأسبوعية تلقائياً.</p></div>
@@ -1181,8 +1242,10 @@ function vSettings(v){
     Object.assign(S.settings,{school:$("#s_school").value.trim(),teacher:$("#s_teacher").value.trim(),subject:$("#s_subject").value.trim(),term:$("#s_term").value.trim(),edu:$("#s_edu").value.trim(),principal:$("#s_principal").value.trim(),msg:$("#s_msg").value,
       minAtt:Math.max(0,Math.min(100,Number($("#s_minAtt").value)||0)),minSkill:Math.max(0,Math.min(100,Number($("#s_minSkill").value)||0)),reqHw:$("#s_reqHw").checked,reqProj:$("#s_reqProj").checked});
     S.settings.bell=PN.map((_,i)=>$("#bell_"+i).value||"");S.settings.plen=Math.max(20,Math.min(90,Number($("#s_plen").value)||45));
-    S.settings.cal=S.settings.cal||{};CUR_KEYS.forEach(k=>{const st=$("#cal_s_"+k).value;const br=$("#cal_b_"+k).value.split(/[،,\s]+/).map(x=>x.trim()).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x));
-      const def=CURR[k];if(st===def.start&&br.join()===def.breaks.join())delete S.settings.cal[k];else S.settings.cal[k]={start:st||def.start,breaks:br}});
+    S.settings.cal=S.settings.cal||{};const newReg=$("#s_region").value,regChanged=newReg!==region();
+    if(!regChanged)CUR_KEYS.forEach(k=>{const st=$("#cal_s_"+k).value;const br=$("#cal_b_"+k).value.split(/[،,\s]+/).map(x=>x.trim()).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x));
+      const def=baseCal(k),ck=calKey(k);if(st===def.start&&br.join()===def.breaks.join())delete S.settings.cal[ck];else S.settings.cal[ck]={start:st||def.start,breaks:br}});
+    S.settings.region=newReg;if(regChanged)reweekAll();
     store.touch("settings");renderShell();toast("حُفظت الإعدادات");});
   $("#restoreFile").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.classes)throw 0;
     confirmSheet("استعادة النسخة الاحتياطية","ستستبدل هذه العملية جميع بيانات السجل الحالية ببيانات الملف.","استعادة",()=>{
@@ -1317,6 +1380,7 @@ document.addEventListener("click",e=>{
     case "allPresent":{const key=ui.date+"_"+ui.period;const r=A().rec;r[key]=r[key]||{};c.students.forEach(s=>{if(!r[key][s.id])r[key][s.id]="p"});store.touch("a_"+c.id);render();toast("سُجّل الجميع حاضرين، عدّل الغائبين");break}
     case "addLesson":lessonForm(null);break;
     case "addLessonWeek":lessonForm(null,Number(b.dataset.week));break;
+    case "importCur":curImport();break;
     case "editLesson":lessonForm(c.lessons.find(l=>l.id===b.dataset.id));break;
     case "addTask":taskForm(b.dataset.kind,null);break;
     case "editTask":{const list=b.dataset.kind==="proj"?c.proj:c.hw;taskForm(b.dataset.kind,list.find(x=>x.id===b.dataset.id));break}
